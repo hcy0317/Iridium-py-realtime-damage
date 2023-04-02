@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "iridium-py-realtime-damage"
+version = "0.1.0"
+description = ""
+authors = ["he0317"]
+license = "MIT"
+readme = "README.md"
+packages = [{include = "iridium_py_realtime_damage"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+matplotlib = "^3.7.1"
+scapy = "^2.5.0"
+pycryptodome = "^3.17"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
