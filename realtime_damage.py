@@ -159,7 +159,7 @@ def find_key():
                 client_data = b_data[70:]
                 data = xor(client_data, init_key)
                 packet_id = get_packet_id(data)
-                if packet_id == 167:
+                if packet_id == 190: # GetPlayerTokenReq
                     client_send_time = int(round(time.time() * 1000))
                     print("send_req_time:%d" % client_send_time)
                 else:
@@ -168,7 +168,7 @@ def find_key():
                 server_data = b_data[70:]
                 data = xor(server_data, init_key)
                 packet_id = get_packet_id(data)
-                if packet_id == 175:
+                if packet_id == 196: # GetPlayerTokenRsp
                     data = remove_magic(data)
                     plain = pp.parse(data, str(packet_id))
                     server_encrypted_seed = base64.b64decode(plain['server_rand_key'])
@@ -230,7 +230,7 @@ def parse_(decrypt_key):
             b_data = remove_magic(b_data)
             #print(packet_id)
             #print(b_data)
-            if packet_id == 1762:  # SceneTeamUpdateNotify
+            if packet_id == 1646:  # SceneTeamUpdateNotify
                 data = pp.parse(b_data, str(packet_id))
                 for guid, avatar_obj in avatar_obj_dict.items():
                     del avatar_obj
@@ -250,13 +250,13 @@ def parse_(decrypt_key):
                         damage_dict.update({avatar_obj_dict[avatar_guid].avatar_name: 0})
                         #attack_result_r.write("SceneTeamUpdateNotify" + " " + str(avatar_obj_dict) + "\n" )
                 send_pipe.send(("update", list(damage_dict.keys())))  # 不写这个就会直到下一次伤害才更新图，没搞明白
-            elif packet_id == 314:  # EvtCreateGadgetNotify
+            elif packet_id == 316:  # EvtCreateGadgetNotify
                 data = pp.parse(b_data, str(packet_id))
                 entity_id = data['entity_id']
                 gadget_obj_dict.update({entity_id: Gadget()})
                 gadget_obj_dict[entity_id].set_owner_id(data['prop_owner_entity_id'])
                 #attack_result_r2.write("EvtCreateGadgetNotify" + str(data) + "\n" + str(gadget_obj_dict) + "\n" )
-            elif packet_id == 234:  # SceneEntityAppearNotify
+            elif packet_id == 256:  # SceneEntityAppearNotify
                 data = pp.parse(b_data, str(packet_id))
                 for entity in data['entity_list']:
                     if entity['entity_type'] == 'PROT_ENTITY_AVATAR':
@@ -265,12 +265,12 @@ def parse_(decrypt_key):
                             avatar_entity_to_guid_map.update({entity["entity_id"]: avatar["guid"]})
                             avatar_obj_dict[avatar["guid"]].entity_id = entity["entity_id"]
                             #attack_result_r3.write("SceneEntityAppearNotify" + str(data) + "\n" + str(avatar_obj_dict) + "\n" )
-            elif packet_id == 27:  # UnionCmdNotify
+            elif packet_id == 75:  # UnionCmdNotify
                 try:
                     data = pp.parse(b_data, str(packet_id))
                     send_flag = False
                     for union_data in data["cmd_list"]:
-                        if union_data["message_id"] == 387:  # CombatInvocationsNotify
+                        if union_data["message_id"] == 345:  # CombatInvocationsNotify
                             each_data = pp.parse(base64.b64decode(union_data["body"]),
                                                  str(union_data["message_id"]))
                             if 'invoke_list' in each_data:
@@ -289,16 +289,16 @@ def parse_(decrypt_key):
                                                 #attack_result_r2.write("attacker_entity_id88" + str(attacker_entity_id) + "\n" )
                                             if str(attacker_entity_id).startswith("16"):
                                                 attacker = avatar_obj_dict[avatar_entity_to_guid_map[attacker_entity_id]].avatar_name
-                                                #attack_result_r2.write("attacker_entity_id16" + str(attacker) + "\n" )
-                                                if "GCKKIKJLCKG" in attack_result:
-                                                    damage = attack_result["GCKKIKJLCKG"] #damage
-                                                    attack_time = attack_result["GAPNFLFDBJK"] #attack_timestamp_ms
+                                                #attack_result_r2.write("attacker_entity_id16" + str(attack_result) + "\n" )
+                                                if "damage" in attack_result: #damage
+                                                    damage = attack_result["damage"] #damage
+                                                    attack_time = attack_result["HOGDLBMOJDA"] #attack_timestamp_ms
                                                     if combat_start_time == 0:
                                                         combat_start_time = attack_time
                                                     elif combat_start_time > attack_time:
                                                         combat_start_time = attack_time
                                                     combat_duration = attack_time - combat_start_time
-                                                    #print(combat_duration, attacker, damage)
+                                                    print(combat_duration, attacker, damage)
                                                     damage_dict[attacker] += damage
                                                     total_damage += damage
                                                     send_flag = True
@@ -496,7 +496,7 @@ if __name__ == '__main__':
                       10000059: "鹿野院平藏", 10000060: "夜兰", 10000062: "埃洛伊", 10000063: "申鹤", 10000064: "云堇",
                       10000065: "久岐忍", 10000066: "神里绫人", 10000067: "柯莱", 10000068: "多莉", 10000069: "提纳里",
                       10000070: "妮露", 10000071: "赛诺", 10000072: "坎蒂丝", 10000073: "纳西妲", 10000074: "莱依拉",
-                      10000075: "流浪者", 10000076: "珐露珊", 10000077: "艾尔海森", 10000078: "瑶瑶", 10000079: "迪西娅", 
+                      10000075: "流浪者", 10000076: "珐露珊", 10000077: "瑶瑶", 10000078: "艾尔海森", 10000079: "迪西娅", 
                       10000080: "米卡"}
     gadget_obj_dict = {}
     avatar_entity_to_guid_map = {}

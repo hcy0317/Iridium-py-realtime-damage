@@ -30,8 +30,12 @@ def judge_type(prop_name):
     else:
         return 2
 
-
+# 解析二进制数据流为数据字典
+# byte_str：二进制数据流
+# packet_id：数据包 ID
+# *args：可变长度参数列表
 def parse(byte_str, packet_id: str, *args):
+    # 根据可变长度参数列表获取序列化规则和属性名
     if len(args) == 0:
         encoding_rules, prop_names = all_serial[packet_id]
     elif len(args) == 1:
@@ -40,52 +44,64 @@ def parse(byte_str, packet_id: str, *args):
         encoding_rules, prop_names = args
     else:
         encoding_rules, prop_names = args[0], args[1]
+    # 存储解析结果。
     decode_data = {}
     i = 0
+    # 解析二进制数据流
     while i < len(byte_str) - 1:
         if len(args) == 3:
             data_type = judge_type(encoding_rules["1"])
             data_id = "1"
         else:
+            # 获取数据类型和数据 ID
             data_type = byte_str[i] & 0b111
             data_id, offset = varint(i, byte_str)
             data_id >>= 3
             i += offset
             i += 1
             data_id = str(data_id)
+        # 根据数据 ID 获取对应的序列化规则
         if data_id in encoding_rules:
             if data_type == 0:
-                # print(decode_data)
+                # 获取变长整数数据
                 data, offset = varint(i, byte_str)
                 if encoding_rules[data_id] == "bool":
+                    # 解析布尔型数据
                     data = bool(data)
                     decode_data[prop_names[data_id]] = data
                 elif encoding_rules[data_id] == "enum":
+                    # 解析枚举型数据
                     enum_name = list(prop_names[data_id].keys())
                     enum_prop = list(prop_names[data_id].values())
                     decode_data[enum_name[0]] = enum_prop[0][str(data)]
                 else:
-                    # print(prop_names[data_id])
+                    # 解析整型数据
                     decode_data[prop_names[data_id]] = data
                 i += offset
                 i += 1
             elif data_type == 1:
                 if encoding_rules[data_id] == "double":
+                    # 解析双精度浮点型数据
                     decode_data[prop_names[data_id]] = struct.unpack("<d", byte_str[i:i + 8])[0]
                 elif encoding_rules[data_id] == "sfixed64":
+                    # 解析 64 位带符号整数数据
                     num = int.from_bytes(byte_str[i:i + 8], byteorder="little", signed=False)
                     decode_data[prop_names[data_id]] = num / 2 if num % 2 == 0 else -(num + 1) / 2
                 elif encoding_rules[data_id] == "fixed64":
+                    # 解析 64 位无符号整数数据
                     decode_data[prop_names[data_id]] = int.from_bytes(byte_str[i:i + 8], byteorder="little",
                                                                       signed=False)
                 i += 8
             elif data_type == 5:
                 if encoding_rules[data_id] == "float":
+                    # 解析单精度浮点型数据
                     decode_data[prop_names[data_id]] = struct.unpack("<f", byte_str[i:i + 4])[0]
                 elif encoding_rules[data_id] == "sfixed32":
+                    # 解析 32 位带符号整数数据
                     num = int.from_bytes(byte_str[i:i + 4], byteorder="little", signed=False)
                     decode_data[prop_names[data_id]] = num / 2 if num % 2 == 0 else -(num + 1) / 2
                 elif encoding_rules[data_id] == "fixed32":
+                    # 解析 32 位无符号整数数据
                     decode_data[prop_names[data_id]] = int.from_bytes(byte_str[i:i + 4], byteorder="little",
                                                                       signed=False)
                 i += 4
@@ -158,3 +174,5 @@ def read_json_packet(json_name):
 all_serial = read_json_packet("packet_serialization.json")
 ucn = read_json_packet("ucn_serialization.json")
 all_serial.update(ucn)
+
+
